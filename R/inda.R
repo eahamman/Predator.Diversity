@@ -5,5 +5,5 @@
 ##' @param g scaler parameter
 ##' @export
 ##' @examples
-##' inda()
+##' ## inda()
 inda <- function (s,c,d,g) {rep(c,length.out=length(s))}

@@ -19,5 +19,5 @@ calcDiff(growpars, svec, prey, pred)
 Diffusion Rate Calculation
 }
 \examples{
-calcDiff()
+## calcDiff()
 }

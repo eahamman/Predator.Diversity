@@ -16,8 +16,7 @@ Pred_Sims(
   timevec,
   num_steps,
   afun = inda,
-  hfun = indh,
-  ...
+  hfun = indh
 )
 }
 \arguments{
@@ -31,7 +30,7 @@ Pred_Sims(
 
 \item{new_prey}{number of new juveniles}
 
-\item{svec0}{initial size vector}
+\item{svec0}{initial size vector (bin labels) for prey}
 
 \item{pred_dens}{vector of predator density}
 
@@ -41,13 +40,13 @@ Pred_Sims(
 
 \item{num_steps}{number of overall timesteps (or reproduction events)}
 
-\item{afun=inda}{attack rate functional form (default is size-independent attack rate)}
+\item{afun}{attack rate functional form (default is size-independent attack rate)}
 
-\item{hfun=indh}{handling time functional form (default is size-independent handling time)}
+\item{hfun}{handling time functional form (default is size-independent handling time)}
 }
 \description{
 Simulate predation by multiple predators with size-dependent functional responses
 }
 \examples{
-Pred_Sims()
+## Pred_Sims()
 }

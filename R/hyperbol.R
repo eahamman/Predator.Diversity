@@ -5,5 +5,5 @@
 ##' @param g scaler parameter
 ##' @export
 ##' @examples
-##' hyperbol()
+##' ## hyperbol()
 hyperbol <- function(s,c,d,g) {c/((1+s)/d)}

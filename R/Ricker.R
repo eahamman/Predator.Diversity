@@ -5,5 +5,5 @@
 ##' @param g scaler parameter
 ##' @export
 ##' @examples
-##' Ricker()
+##' Ricker(1,1,1,1)
 Ricker <- function(s,c,d,g) {c*(s/d*exp(1-(s/d)))}

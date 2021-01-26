@@ -3,9 +3,12 @@
 ##' @param x initial condition vector (predator densities, prey densities)
 ##' @param afun attack rate function - default is size-independent
 ##' @param hfun handling time function - default is size-independent
+##' @param params parameter list
 ##' @export
+##' @importFrom utils relist
+##' @importFrom stats setNames
 ##' @examples
-##' gradientfun()
+##' ## gradientfun()
 
 gradientfun <- function(time,x,params, afun=inda, hfun=indh) {
   npred <- params[["npred"]]   ## need to extract number of predators as meta-parameter ...

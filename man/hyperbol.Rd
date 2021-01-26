@@ -19,5 +19,5 @@ hyperbol(s, c, d, g)
 Hyperbolic Attack Rate Function
 }
 \examples{
-hyperbol()
+## hyperbol()
 }

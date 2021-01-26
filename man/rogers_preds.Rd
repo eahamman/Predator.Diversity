@@ -16,18 +16,10 @@ rogers_preds(N0, a, h, P, tval)
 \item{P}{number of predators}
 
 \item{tval}{length of predation experiment}
-
-\item{s}{size of prey}
-
-\item{d}{size at max attack rate}
-
-\item{gamma}{shape parameter for power ricker attack rate}
-
-\item{afun}{form of attack rate size-dependence:  options, Ricker, powRicker (will expand later)}
 }
 \description{
 Rogers per-capital mortality risk with multiple of the same predator
 }
 \examples{
-rogers_risk()
+## rogers_preds()
 }

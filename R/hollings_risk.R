@@ -3,13 +3,13 @@
 ##' @param s size of prey
 ##' @param d size at max attack rate
 ##' @param gamma shape parameter for power ricker attack rate
-##' @param a attack rate
 ##' @param h handling time
+##' @param c attack rate
 ##' @param tval length of predation experiment
 ##' @param afun form of attack rate size-dependence:  options, inda Ricker, powRicker
 ##' @export
 ##' @examples
-##' hollings_risk()
+##' ## hollings_risk()
 
 hollings_risk <- function(N0,c,h,tval,s,d,gamma,afun){
 

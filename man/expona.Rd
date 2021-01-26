@@ -19,5 +19,5 @@ expona(s, c, d, g)
 Exponential Attack Rate Function
 }
 \examples{
-expona()
+## expona()
 }

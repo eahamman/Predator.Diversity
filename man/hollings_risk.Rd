@@ -9,6 +9,8 @@ hollings_risk(N0, c, h, tval, s, d, gamma, afun)
 \arguments{
 \item{N0}{initial prey density}
 
+\item{c}{attack rate}
+
 \item{h}{handling time}
 
 \item{tval}{length of predation experiment}
@@ -20,12 +22,10 @@ hollings_risk(N0, c, h, tval, s, d, gamma, afun)
 \item{gamma}{shape parameter for power ricker attack rate}
 
 \item{afun}{form of attack rate size-dependence:  options, inda Ricker, powRicker}
-
-\item{a}{attack rate}
 }
 \description{
 Hollings per-capital mortality risk
 }
 \examples{
-hollings_risk()
+## hollings_risk()
 }

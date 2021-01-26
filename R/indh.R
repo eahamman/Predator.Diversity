@@ -4,5 +4,5 @@
 ##' @param n scaler parameter
 ##' @export
 ##' @examples
-##' indh()
+##' ## indh()
 indh<- function(s,m,n) {rep(m,length.out=length(s))}

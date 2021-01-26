@@ -3,13 +3,13 @@
 ##' @param s size of prey
 ##' @param d size at max attack rate
 ##' @param gamma shape parameter for power ricker attack rate
-##' @param a attack rate
+##' @param c attack rate
 ##' @param h handling time
 ##' @param tval length of predation experiment
 ##' @param afun form of attack rate size-dependence:  options, Ricker, powRicker (will expand later)
 ##' @export
 ##' @examples
-##' rogers_risk()
+##' ## rogers_risk()
 
 rogers_risk <- function(N0,c,h,tval,s,d,gamma,afun){
 

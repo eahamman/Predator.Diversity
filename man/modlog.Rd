@@ -19,5 +19,5 @@ modlog(s, c, d, g)
 Modified Logistic Function
 }
 \examples{
-modlog()
+## modlog()
 }

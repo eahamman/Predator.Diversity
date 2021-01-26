@@ -5,5 +5,5 @@
 ##' @param g scaler parameter
 ##' @export
 ##' @examples
-##' modlog()
+##' ## modlog()
 modlog <- function(s,c,d,g) {c/(1+exp((s-d)/g))}

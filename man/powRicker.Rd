@@ -19,5 +19,5 @@ powRicker(s, c, d, g)
 Power Ricker Attack Rate
 }
 \examples{
-powRicker()
+## powRicker()
 }

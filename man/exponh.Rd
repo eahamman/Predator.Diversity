@@ -17,5 +17,5 @@ exponh(s, m, n)
 Exponential handling time
 }
 \examples{
-exponh()
+exponh(1,1,1)
 }

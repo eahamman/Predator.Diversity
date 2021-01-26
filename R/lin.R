@@ -4,5 +4,5 @@
 ##' @param n scaler parameter
 ##' @export
 ##' @examples
-##' lin()
+##' ## lin()
 lin <- function(s,m,n) {n*s}

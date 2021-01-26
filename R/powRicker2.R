@@ -5,5 +5,5 @@
 ##' @param g scaler parameter
 ##' @export
 ##' @examples
-##' powRicker2()
+##' ## powRicker2()
 powRicker2 <- function(s,c,d,g) { c*((s/d)^g*exp(1-(s/d)))}

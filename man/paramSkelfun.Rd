@@ -21,5 +21,5 @@ paramSkelfun(
 Reorganize Parameters
 }
 \examples{
-paramSkelfun()
+## paramSkelfun()
 }

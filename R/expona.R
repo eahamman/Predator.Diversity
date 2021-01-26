@@ -5,5 +5,5 @@
 ##' @param g scaler parameter
 ##' @export
 ##' @examples
-##' expona()
+##' ## expona()
 expona <- function(s,c,d,g) {c*exp(1-(s/d))}

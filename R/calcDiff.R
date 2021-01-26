@@ -5,7 +5,7 @@
 ##' @param pred vector of predator densities
 ##' @export
 ##' @examples
-##' calcDiff()
+##' ## calcDiff()
 
 calcDiff <- function(growpars,svec,prey,pred) { # why are we calling predators?
   D <- with(as.list(growpars),D) # acquire D value (different from earlier simulations - now it will be scaled by the size of each bin)

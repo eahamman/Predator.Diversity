@@ -19,5 +19,5 @@ powRicker2(s, c, d, g)
 Alternative Formation of Power Ricker Attack Rate
 }
 \examples{
-powRicker2()
+## powRicker2()
 }

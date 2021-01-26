@@ -2,7 +2,7 @@
 ##' @param afun Size-dependent attack rate function
 ##' @param FRfun Hollings or Rogers
 ##' @param a maximum attack rate
-##' @param a_var random effect variance
+##' @param a_sd random effect standard deviation
 ##' @param h handling time
 ##' @param d size at max attack rate
 ##' @param gamma shape parameter for size dependence
@@ -14,8 +14,9 @@
 ##' @param logRE implement random effects on log scale
 ##' @export
 ##' @examples
-##' FR_Data_Sim()
-
+##' sim1 <- FR_Data_Sim("Ricker","Rogers",a=1,a_sd=0.1,
+##'          h=1,d=1,reps=10,N0s=seq(10,40,by=10),Sizes=1:10,tval=10)
+##' @importFrom stats rlnorm rbinom rnorm
 FR_Data_Sim <- function(afun,FRfun,a,a_sd,h,d,gamma,reps,N0s,Sizes,tval,deterministic=FALSE,logRE=TRUE){
   
   test.vals <- expand.grid(N0=N0s,size=Sizes,block=1:reps)
@@ -28,17 +29,14 @@ FR_Data_Sim <- function(afun,FRfun,a,a_sd,h,d,gamma,reps,N0s,Sizes,tval,determin
     c <- a+RE
   }
   
-  
-  if(FRfun=="Holling"|FRfun=="Hollings"){
-    if(afun=="Ricker"){
-      p <- with(test.vals,hollings_risk(N0,c[block],h,tval,size,d,gamma,afun="Ricker"))
-    }
-    if(afun=="powRicker"){
-      p <- with(test.vals,hollings_risk(N0,c[block],h,tval,size,d,gamma,afun="powRicker"))
-    }
-    if(afun=="inda"){
-      p <- with(test.vals,hollings_risk(N0,c[block],h,tval,size,d,gamma,afun="inda"))
-    }
+
+  ## FIXME: these are all the same arg lists, could be significantly condensed???
+  if(grepl("Hollings?",FRfun)) {
+      p <- with(test.vals,
+                switch(afun,
+                       Ricker=hollings_risk(N0,c[block],h,tval,size,d,gamma,afun="Ricker"),
+                       powRicker=hollings_risk(N0,c[block],h,tval,size,d,gamma,afun="powRicker"),
+                       hollings_risk(N0,c[block],h,tval,size,d,gamma)))
   }
   if(FRfun=="Rogers"){
     if(afun=="Ricker"){
@@ -51,8 +49,8 @@ FR_Data_Sim <- function(afun,FRfun,a,a_sd,h,d,gamma,reps,N0s,Sizes,tval,determin
       p <- with(test.vals,rogers_risk(N0,c[block],h,tval,size,d,gamma,afun="inda"))
     }
   }
-  if(deterministic==FALSE){
-    z <- rbinom(nrow(test.vals),prob=p,size=test.vals$N0)
+  if(!deterministic){
+      z <- rbinom(nrow(test.vals),prob=p,size=test.vals$N0)
   }else{z <- p*test.vals$N0}
   return(data.frame(test.vals,killed=z))
 }

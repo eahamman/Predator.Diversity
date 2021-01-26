@@ -13,5 +13,5 @@ FR_Disp(parms)
 Functional Dispersion - Functional Response Parameters
 }
 \examples{
-FR_Disp()
+FR_Disp(rbind(1:4))
 }

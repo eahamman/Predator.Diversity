@@ -5,5 +5,5 @@
 ##' @param time timestep for growth
 ##' @export
 ##' @examples
-##' ling()
+##' ## ling()
 ling <- function(max_size,s_init,r,time){s_init+r*time}

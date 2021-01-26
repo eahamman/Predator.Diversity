@@ -30,5 +30,5 @@ parmat <- matrix(c(1,1,1,   ## c,d,g pred 1
                    1,1,1),  ## c,d,g pred2
        byrow=TRUE,
        nrow=2,dimnames=list(c("pred1","pred2"),c("c","d","g")))
-calcPred()
+## calcPred()
 }

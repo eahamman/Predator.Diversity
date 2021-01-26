@@ -4,36 +4,35 @@
 ##' @param r1 growth rate
 ##' @param prey_dens density of prey (one number)
 ##' @param new_prey number of new juveniles
-##' @param svec0 initial size vector
+##' @param svec0 initial size vector (bin labels) for prey
 ##' @param pred_dens vector of predator density
 ##' @param predpar.mat matrix of predator functional response parameters (each line is a predator, each column is a parameter)
 ##' @param timevec vector of timesteps for ode (time between reproduction events)
 ##' @param num_steps number of overall timesteps (or reproduction events)
-##' @param afun=inda attack rate functional form (default is size-independent attack rate)
-##' @param hfun=indh handling time functional form (default is size-independent handling time)
+##' @param afun attack rate functional form (default is size-independent attack rate)
+##' @param hfun handling time functional form (default is size-independent handling time)
 ##' @export
 ##' @examples
-##' Pred_Sims()
+##' ## Pred_Sims()
+##' @importFrom deSolve ode
 
 Pred_Sims <- function(
-  maxsize, # maximum size (all bins will approach this)
-  dd1, # diffusion rate
-  r1, # growth rate
-  prey_dens, #density of prey (one number) or vector length of svec0
-  new_prey, # number of new juveniles
+  maxsize,
+  dd1,
+  r1,
+  prey_dens,
+  new_prey,
   #smin, # smallest possible prey size
   #smax, # old max prey size (still called - need to delete this)
   #ds, # old prey step for svec0, (still called - need to delete this)
-  svec0, # initial size vector (bin labels) for prey
+  svec0,
   #p0, # vector of the number of prey in each size bin
-  pred_dens, #density of predators (vector)
+  pred_dens,
   predpar.mat,
-  
   timevec,
   num_steps,
   afun=inda,
-  hfun=indh,
-  ...
+  hfun=indh
 ){
   npred <- nrow(predpar.mat)#length(pred_dens)
   

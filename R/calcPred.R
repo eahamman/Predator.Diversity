@@ -14,7 +14,7 @@
 ##'                    1,1,1),  ## c,d,g pred2
 ##'        byrow=TRUE,
 ##'        nrow=2,dimnames=list(c("pred1","pred2"),c("c","d","g")))
-##' calcPred()
+##' ## calcPred()
 calcPred <- function(parmat,svec,preyvec,predvec,afun=inda, hfun=indh) {
   amat <- with(as.data.frame(parmat),mapply(afun,c,d,g,MoreArgs=list(s=svec))) # Calculate matrix of attack rates (each predator, each prey size)
   hmat <- with(as.data.frame(parmat),mapply(hfun,m,n,MoreArgs=list(s=svec))) # Calculate matrix of handling times (each predator, each prey size)

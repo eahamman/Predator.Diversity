@@ -17,5 +17,5 @@ powFun1(s, m, n)
 Power function handling time
 }
 \examples{
-powFun1()
+## powFun1()
 }

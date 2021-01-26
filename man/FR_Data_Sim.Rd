@@ -27,6 +27,8 @@ FR_Data_Sim(
 
 \item{a}{maximum attack rate}
 
+\item{a_sd}{random effect standard deviation}
+
 \item{h}{handling time}
 
 \item{d}{size at max attack rate}
@@ -44,12 +46,11 @@ FR_Data_Sim(
 \item{deterministic}{return probability instead of binomal RV}
 
 \item{logRE}{implement random effects on log scale}
-
-\item{a_var}{random effect variance}
 }
 \description{
 Functional Response Experiment Simulation
 }
 \examples{
-FR_Data_Sim()
+sim1 <- FR_Data_Sim("Ricker","Rogers",a=1,a_sd=0.1,
+         h=1,d=1,reps=10,N0s=seq(10,40,by=10),Sizes=1:10,tval=10)
 }

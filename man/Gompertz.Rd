@@ -13,11 +13,11 @@ Gompertz(max_size, s_init, r, time)
 
 \item{r}{growth rate}
 
-\item{time}{number of timesteps}
+\item{time}{time steps}
 }
 \description{
 Gompertz Growth Function
 }
 \examples{
-Gompertz()
+Gompertz(max_size=100,s_init=1,r=1,time=0:10)
 }

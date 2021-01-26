@@ -11,6 +11,8 @@ gradientfun(time, x, params, afun = inda, hfun = indh)
 
 \item{x}{initial condition vector (predator densities, prey densities)}
 
+\item{params}{parameter list}
+
 \item{afun}{attack rate function - default is size-independent}
 
 \item{hfun}{handling time function - default is size-independent}
@@ -19,5 +21,5 @@ gradientfun(time, x, params, afun = inda, hfun = indh)
 Reorganize Parameters
 }
 \examples{
-gradientfun()
+## gradientfun()
 }

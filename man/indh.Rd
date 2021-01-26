@@ -17,5 +17,5 @@ indh(s, m, n)
 Size-independent handling time
 }
 \examples{
-indh()
+## indh()
 }

@@ -17,5 +17,5 @@ lin(s, m, n)
 Linear handling time
 }
 \examples{
-lin()
+## lin()
 }

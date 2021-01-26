@@ -4,5 +4,5 @@
 ##' @param n scaler parameter
 ##' @export
 ##' @examples
-##' exponh()
+##' exponh(1,1,1)
 exponh <- function(s,m,n) {m*exp(n*s)}

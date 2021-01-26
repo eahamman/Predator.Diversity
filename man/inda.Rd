@@ -19,5 +19,5 @@ inda(s, c, d, g)
 Size-independent attack rate (constant)
 }
 \examples{
-inda()
+## inda()
 }

@@ -4,7 +4,7 @@
 ##' @param growpars vector of growth parameters
 ##' @export
 ##' @examples
-##' paramSkelfun()
+##' ## paramSkelfun()
 paramSkelfun <- function(npred,
                          predpars=c("c","d","g","m","n"),
                          growpars=c("r","max_size","D"))

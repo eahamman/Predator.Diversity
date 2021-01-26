@@ -19,5 +19,5 @@ Ricker(s, c, d, g)
 Ricker Attack Rate Function
 }
 \examples{
-Ricker()
+Ricker(1,1,1,1)
 }

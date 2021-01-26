@@ -19,5 +19,5 @@ ling(max_size, s_init, r, time)
 Linear somatic growth (constant growth rate among sizes)
 }
 \examples{
-ling()
+## ling()
 }

@@ -4,5 +4,5 @@
 ##' @param n scaler parameter
 ##' @export
 ##' @examples
-##' powFun1()
+##' ## powFun1()
 powFun1 <- function(s,m,n) {m*s^n}
