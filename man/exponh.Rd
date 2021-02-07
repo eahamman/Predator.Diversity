@@ -2,9 +2,15 @@
 % Please edit documentation in R/exponh.R
 \name{exponh}
 \alias{exponh}
-\title{Exponential handling time}
+\alias{indh}
+\alias{powFun1}
+\title{Handling time functions}
 \usage{
 exponh(s, m, n)
+
+indh(s, m, n)
+
+powFun1(s, m, n)
 }
 \arguments{
 \item{s}{size vector of prey}
@@ -14,7 +20,7 @@ exponh(s, m, n)
 \item{n}{scaler parameter}
 }
 \description{
-Exponential handling time
+Handling time functions
 }
 \examples{
 exponh(1,1,1)
