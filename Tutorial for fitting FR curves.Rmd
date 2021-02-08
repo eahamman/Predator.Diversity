@@ -1,0 +1,419 @@
+---
+title: "Fitting Size Dependent Functional Response Curves"
+output: html_notebook
+---
+```{r, echo=TRUE,warning=FALSE,message=FALSE}
+#load libraries
+require(emdbook)
+require(bbmle)
+require(R2WinBUGS)
+require(plotrix)
+require(plyr)
+require(ggplot2)
+require(gridExtra)
+require(Hmisc)
+require(cowplot)
+```
+
+First we will use a function to simulate size dependent Functional response data. This data simulator adds random variation in the intercept of the attack rate function for each replicate, but additional methodogy is needed to incorporate a random effect (e.g. Bayesian analysis). 
+
+This data simulator assumes prey risk changes with prey size following a power ricker function (described farther down in this document), but this can be easliy modified for other functional forms (see below).
+
+There are functions below for both a Hollings Type II and a Rogers functional form.
+
+```{r}
+## Runctional Response equations
+rogers.pred <- function(N0,a,h,tval) {
+  N0 - lambertW(a*h*N0*exp(-a*(tval-h*N0)))/(a*h)
+}
+
+holling2.pred <- function(N0,a,h, tval) {
+  a*N0/(1+a*h*N0*tval)
+}
+
+## Predation risk function: power-Ricker as a function of size (From McCoy et al 2011)
+mortrisk.holl <- function(N0,size,h,a,d,gamma,tval){
+  ar <- a*(size/d)^gamma*(exp(1-size/d)) ## power-Ricker attack rate
+  risk <- ar/(1+ar*N0*h*tval)                 ## Holling risk (per capita)
+  pmin(1.0,risk)                         ## bound risk <= 1
+}
+
+mortrisk.rog <- function(N0,size,h,a,d,gamma,tval){
+  ar <- a*(size/d)^gamma*(exp(1-size/d)) ## power-Ricker attack rate
+  risk <- rogers.pred(N0,a=ar,h,tval)/N0
+  pmin(1.0,risk)                  ## bound risk <= 1 
+}
+
+## Generate data
+set.seed(1001) ## set random-number seed for reproducibility
+
+## The data simulated will depict a case where initial attack rate "a" varies
+## across n replicate blocks
+simdata.holl <- function(nblock){
+  test.vals <- expand.grid(N0=seq(10,100,by=10), size=seq(5,50,by=5),block=1:nblock)
+  ## attack rate varies randomly by block with a median of 0.5
+  ##  and proportional variation of approx 10%
+  a <- rlnorm(nblock,meanlog=log(0.5),sdlog=.10)
+  p <- with(test.vals,mortrisk.holl(N0=N0,size=size,a=a[block],d=6,h=0.01,gamma=2,tval=1))
+  z <- rbinom(nrow(test.vals),prob=p,size=test.vals$N0)
+  data.frame(test.vals,killed=z)
+}
+
+parm_exact <- c(0.5,6,0.01,2)
+
+simdata.rog <- function(nblock){
+  test.vals <- expand.grid(N0=seq(10,100,by=10), size=seq(5,50,by=5),block=1:nblock)
+  ## attack rate varies randomly by block with a median of 0.5
+  ##  and proportional variation of approx 10%
+  a <- rlnorm(nblock,meanlog=log(0.5),sdlog=.10)
+  p <- with(test.vals,mortrisk.rog(N0=N0,size=size,a=a[block],d=6,h=0.01,gamma=2,tval=1))
+  z <- rbinom(nrow(test.vals),prob=p,size=test.vals$N0)
+  data.frame(test.vals,killed=z)
+}
+##Now we can simulate data for 6 reps
+x.holl <- simdata.holl(6)
+x.rog <- simdata.rog(6)
+
+```
+
+Look at the data and consider initial patterns
+
+```{r}
+p1 <- ggplot(x.holl,aes(x=N0,y=killed,color=size, group=size))+
+  stat_summary(fun.data=mean_cl_boot,size=.5)+ylim(0,45)
+p2 <- ggplot(x.rog,aes(x=N0,y=killed,color=size, group=size))+
+  stat_summary(fun.data=mean_cl_boot,size=.5)+ylim(0,45)
+plot_grid(p1,p2,ncol=2)
+```
+
+Now we will run a variety of models that will fit Type II functional responses using Rogers Random Predation model via the Lambert's "W" function, or Holling's Type II.  For each fit we will use a different functional form to estimate the attack rate as a function of prey size.  Model selection will be based on delta AICc. 
+
+First in this process we will remind ourselves of Type II FR and Rogers equation. I the below plot solid lines are from Rogers and dashed lines are form Hollings. The red curve indicates Time=1, blue is Time= 2 days and green is Time= 4 days. 
+
+```{r}
+FR_plots=ggplot(data.frame(N0=c(0, 100)), aes(N0)) + 
+  stat_function(fun=holling2.pred, args=list(a=0.004, h=15, tval=1),linetype="dashed",size=2, color="red")+ 
+  stat_function(fun=holling2.pred, args=list(a=0.004, h=15, tval=2),linetype="dashed",size=2, color="blue")+ 
+  stat_function(fun=holling2.pred, args=list(a=0.004, h=15, tval=4),linetype="dashed",size=2, color="green")+ 
+  stat_function(fun=rogers.pred, args=list(a=0.004, h=15, tval=1),color="red")+ 
+  stat_function(fun=rogers.pred, args=list(a=0.004, h=15, tval=2),color="blue")+ 
+  stat_function(fun=rogers.pred, args=list(a=0.004, h=15, tval=4),color="green")+theme_bw()
+FR_plots
+```
+
+
+Second in this process we will write out our attack rate functions and plot them to see the variety of shapes assumed. Each of the functions below have been reparameterized so that the paramters have comparable  interpretations-- "size"" is prey size, "c" can be interpreted as  a predation-scale parameter (i.e., it sets the position of the curve on the Y-axis), and "d"" can be interpreted as a size-scale parameter (i.e., it sets the position of the curve along the X-axis).
+
+```{r}
+#Standard Ricker function
+ricker=function(c, d, size){
+  c*(size/d)*exp(-size/d)
+}
+ricker_plot=ggplot(data.frame(size=c(0, 30)), aes(size)) + stat_function(fun=ricker, args=list(c=0.04, d=4))+ggtitle("Ricker")+theme_bw()
+
+#Modified or power Ricker function
+power_ricker=function(c, d, gamma, size){
+  c*(size/d)^gamma*(exp(1-size/d))
+}
+power_ricker_plot=ggplot(data.frame(size=c(0, 30)), aes(size)) + stat_function(fun=power_ricker, args=list(c=0.5, d=10, gamma=0.5))+ggtitle("Power Ricker")+theme_bw()
+
+##logistic function
+logistic=function(c, d, b, size){
+  c/(1+exp((size-d)/b))
+}
+logistic_plot=ggplot(data.frame(size=c(0, 30)), aes(size)) + stat_function(fun=logistic, args=list(c=0.5, d=10, b=0.9))+ggtitle("Logisitc")+theme_bw()
+
+##Hyperbolic decay function
+hyperbol=function(c,d, size){
+  c/(1+size/d)
+}
+hyperbol_plot=ggplot(data.frame(size=c(0, 30)), aes(size)) + stat_function(fun=hyperbol, args=list(c=0.5, d=10))+ggtitle("Hyperbolic")+theme_bw()
+
+
+##Hyperbolic Quadratic decay function
+hyperbol_quad=function(c,d,phi,size){
+  c/(1+(size/d)+phi*(size/d)^2)
+}
+hyperbol_quad_plot=ggplot(data.frame(size=c(0, 30)), aes(size)) + stat_function(fun=hyperbol_quad, args=list(c=0.2, d=-8, phi=0.33))+ggtitle("Hyperbolic-quadratic")+theme_bw()
+
+##Exponential decay
+exponential=function(c, d, size){
+  c*exp(-size/d)
+}
+exp_plot=ggplot(data.frame(size=c(0, 30)), aes(size)) + stat_function(fun=exponential, args=list(c=0.2, d=8))+ggtitle("Exponenetial")+theme_bw()
+
+##generate plot
+grid.arrange(ricker_plot,power_ricker_plot,logistic_plot,hyperbol_plot,hyperbol_quad_plot,exp_plot,nrow=2,top="Candidate functions for the form of size dependence ")
+```
+
+Now we can fit the models.  We will use the MLE2 function to fit each R curve assuming Binomial errors. We will also fit the FR models
+
+I will try to clean these up in the futre and be more clever with the fitting....but for the moment these will do.  (Note:  Power Ricker formula is corrected).  Additionally, all of these are Hollings Type II data fit with the Hollings FR.
+```{r}
+ind <- mle2(killed~dbinom(prob=1/(1/(c)+h*N0),
+                 size=N0),
+                 start=list(c=0.3,h=0.001),
+                 data=x.holl)
+
+
+sv = list(c=.5,d=6,h=0.001)
+ricker = mle2(killed~dbinom(prob=1/(1/(c*(size/d)*exp(-size/d))+h*N0),
+                 size=N0),
+                 start=sv,
+                 data=x.holl)
+
+sv = list(c=0.06,d=40,h=0.003)
+powricker = mle2(killed~dbinom(prob=1/(1/(c*(size/d)^gamma*(exp(1-size/d)))+h*N0),
+                    size=N0),
+                    start=c(sv,list(gamma=-.7)),
+                    data=x.holl,"BFGS")
+
+logist = mle2(killed~dbinom(prob=1/(1/(c/(1+exp((size-d)/b)))+h*N0),
+                 size=N0),
+                 start=c(sv,list(b=10)),
+                 data=x.holl)
+
+hyper = mle2(killed~dbinom(prob=1/(1/(c/(1+size/d))+h*N0),
+                size=N0),
+                start=sv,
+                data=x.holl,"BFGS")
+
+hyperq = mle2(killed~dbinom(prob=1/(1/(c/(1+(size/d)+phi*(size/d)^2))+h*N0),size=N0),
+          start=list(c=1/5.65,d=(5.65/-0.656),h=0.00698,phi=0.02536*(5.65/(0.656^2))),
+          method="BFGS",control=list(maxit=10000),data=x.holl)
+
+exp = mle2(killed~dbinom(prob=1/(1/(c*exp(-size/d))+h*N0),
+              size=N0),
+              start=sv,
+              data=x.holl)
+```
+
+Now lets do the model comparisons
+
+```{r}
+
+q1 = ICtab(ind,ricker,powricker,logist,hyper,hyperq,exp,
+           type="AICc",sort=TRUE,delta=TRUE,nobs=nrow(x.holl),weights=TRUE)
+q1
+
+```
+
+Now generate a plot with the fits from each model illustrated for these data with the best model first and then each successively worse model filed in afterwards.
+
+```{r}
+modlist = list(powricker=powricker,
+               exp=exp,
+               hyperq=hyperq,
+               logist=logist,
+               ricker=ricker,
+               hyper=hyper,
+               ind=ind)
+
+modlist <- modlist[gsub("","",attr(q1,"row.names"))]
+
+#modlist <- modlist[-7]
+
+predframe = data.frame(size=x.holl$size,initial=x.holl$N0)#expand.grid(size = seq(1.05,10.05,length=5), initial = sort(unique(dat_w$N0)))
+
+pfun = function(fit, name) {
+  data.frame(predframe, killed = predict(fit, newdata = predframe),
+             model = factor(name))
+}
+
+mframe = do.call(rbind, mapply(pfun, modlist, names(modlist),
+                               SIMPLIFY = FALSE))
+
+print(ggplot(data=mframe, aes(x = size, y = killed, colour = as.factor(mframe$initial),
+      group = as.factor(mframe$initial))) + geom_line() +facet_wrap(~model)
+      +geom_point(data=x.holl))
+
+```
+
+## Depletion
+
+The fits/data generated above were generated and fit with a Hollings Type II, but in reality, we often have to account for depletion.  
+
+So let's see what happens when we use the Holligns fit on the data generated using Roger's.
+
+```{r}
+sv = list(c=.5,d=6,h=0.001)
+ind <- mle2(killed~dbinom(prob=1/(1/(c)+h*N0),
+                 size=N0),
+                 start=list(c=0.3,h=0.001),
+                 data=x.rog)
+
+
+ricker = mle2(killed~dbinom(prob=1/(1/(c*(size/d)*exp(-size/d))+h*N0),
+                 size=N0),
+                 start=sv,
+                 data=x.rog)
+
+sv = list(c=0.06,d=40,h=0.003)
+powricker = mle2(killed~dbinom(prob=1/(1/(c*(size/d)^gamma*(exp(1-size/d)))+h*N0),
+                    size=N0),
+                    start=c(sv,list(gamma=-.7)),
+                    data=x.rog,"BFGS")
+
+logist = mle2(killed~dbinom(prob=1/(1/(c/(1+exp((size-d)/b)))+h*N0),
+                 size=N0),
+                 start=c(sv,list(b=10)),
+                 data=x.rog)
+
+hyper = mle2(killed~dbinom(prob=1/(1/(c/(1+size/d))+h*N0),
+                size=N0),
+                start=sv,
+                data=x.rog,"BFGS")
+
+hyperq = mle2(killed~dbinom(prob=1/(1/(c/(1+(size/d)+phi*(size/d)^2))+h*N0),size=N0),
+          start=list(c=1/5.65,d=(5.65/-0.656),h=0.00698,phi=0.02536*(5.65/(0.656^2))),
+          method="BFGS",control=list(maxit=10000),data=x.rog)
+
+exp = mle2(killed~dbinom(prob=1/(1/(c*exp(-size/d))+h*N0),
+              size=N0),
+              start=sv,
+              data=x.rog)
+```
+
+Now lets do the model comparisons
+
+```{r}
+q1 = ICtab(ind,ricker,powricker,logist,hyper,hyperq,exp,
+           type="AICc",sort=TRUE,delta=TRUE,nobs=nrow(x.rog),weights=TRUE)
+q1
+```
+
+Now generate a plot with the fits from each model illustrated for these data with the best model first and then each successively worse model filed in afterwards.
+
+```{r}
+modlist = list(ind=ind,
+               powricker=powricker,
+               exp=exp,
+               hyperq=hyperq,
+               logist=logist,
+               ricker=ricker,
+               hyper=hyper)
+
+modlist <- modlist[gsub("","",attr(q1,"row.names"))]
+
+#modlist <- modlist[-7]
+
+predframe = data.frame(size=x.rog$size,initial=x.rog$N0)#expand.grid(size = seq(1.05,10.05,length=5), initial = sort(unique(dat_w$N0)))
+
+pfun = function(fit, name) {
+  data.frame(predframe, killed = predict(fit, newdata = predframe),
+             model = factor(name))
+}
+
+mframe = do.call(rbind, mapply(pfun, modlist, names(modlist),
+                               SIMPLIFY = FALSE))
+
+print(ggplot(data=mframe, aes(x = size, y = killed, colour = as.factor(mframe$initial),
+      group = as.factor(mframe$initial))) + geom_line() +facet_wrap(~model)
+      +geom_point(data=x.rog))
+```
+
+
+Now, let's incorporate depletion into the estimates.  To do this, we'll need to add in the size dependence to rogers for each function.  Here's the power ricker as an example.  With Rogers, the best optimizer is probably going to be "L-BFGS-B", with the lower=1e-5 so it can't bounce below zero.
+
+```{r}
+sv = list(c=0.06,d=10,h=0.003)
+
+rogers.powricker <- function(N0,c,size,gamma,d,h,tval) {
+  a <- c*(size/d)^gamma*(exp(1-size/d))
+  N0 - lambertW(a*h*N0*exp(-a*(tval-h*N0)))/(a*h)
+}
+
+powricker_rog = mle2(killed~dbinom(prob=(rogers.powricker(N0,c,size,gamma,d,h,tval=1)/N0),
+                                   size=N0),
+                                start=c(sv,list(gamma=.1)),
+                                   data=x.rog,method="L-BFGS-B",lower=1e-5)
+```
+Comparing the Rogers and Holling fits,
+
+How does the rogers do relative to the Hollings?
+```{r}
+Summary <- rbind(parm_exact,coef(powricker),coef(powricker_rog))
+rownames(Summary) <- c("True","mle - Type II", "mle2 - Rogers")
+Summary
+```
+We can see how accounting for depletion, even for a 1 day experiment, gets us much closer to our true parameter values.
+
+```{r}
+holling2.pred.powricker <- function(N0,c,size,gamma,d,h,tval) {
+  a <- c*(size/d)^gamma*(exp(1-size/d))
+  a*N0/(1+a*h*N0*tval)
+}
+
+pal=c("#7570b3","#1b9e77","#d95f02")
+ParmsDF <- data.frame(Summary)
+x_plot <- x.rog
+x_plot$size <- factor(x_plot$size)
+x_plot <- subset(x_plot,size==10|size==25|size==50)
+
+p.hollings <- ggplot(data.frame(N0=c(0, 100)), aes(N0)) + 
+  stat_function(fun=holling2.pred.powricker, args=list(c=ParmsDF$c[2], size=50,gamma=ParmsDF$gamma[2],d=ParmsDF$d[2],h=ParmsDF$h[2], tval=1),linetype="dashed",color=pal[1])+ geom_point(data=x_plot,aes(x=N0,y=killed,color=size))+
+  stat_function(fun=holling2.pred.powricker, args=list(c=ParmsDF$c[2], size=25,gamma=ParmsDF$gamma[2],d=ParmsDF$d[2],h=ParmsDF$h[2], tval=1),linetype="dashed",color=pal[2])+
+
+stat_function(fun=holling2.pred.powricker, args=list(c=ParmsDF$c[2], size=50,gamma=ParmsDF$gamma[2],d=ParmsDF$d[2],h=ParmsDF$h[2], tval=1),linetype="dashed",color=pal[3])+
+  
+  stat_function(fun=rogers.powricker, args=list(c=ParmsDF$c[3], size=10,gamma=ParmsDF$gamma[3],d=ParmsDF$d[3],h=ParmsDF$h[3], tval=1),linetype="solid",color=pal[1])+
+  stat_function(fun=rogers.powricker, args=list(c=ParmsDF$c[3], size=25,gamma=ParmsDF$gamma[3],d=ParmsDF$d[3],h=ParmsDF$h[3], tval=1),linetype="solid",color=pal[2])+ 
+  stat_function(fun=rogers.powricker, args=list(c=ParmsDF$c[3], size=50,gamma=ParmsDF$gamma[3],d=ParmsDF$d[3],h=ParmsDF$h[3], tval=1),linetype="solid",color=pal[3])+
+  geom_point(data=x_plot,aes(x=N0,y=killed,color=size))+
+  scale_fill_manual(values=pal)+
+  scale_color_manual(values=pal)+
+  ggtitle("Hollings Data")
+p.hollings
+```
+
+For other fits to test 
+
+```{r}
+rogers.ricker <- function(N0,c,size,d,h,tval) {
+  a <- c*(size/d)*exp(-size/d)
+  N0 - lambertW(a*h*N0*exp(-a*(tval-h*N0)))/(a*h)
+}
+
+rogers.logistic <- function(N0,c,size,d,b,h,tval) {
+  a <- c/(1+exp((size-d)/b))
+  N0 - lambertW(a*h*N0*exp(-a*(tval-h*N0)))/(a*h)
+}
+
+rogers.hyperbol <- function(N0,c,size,d,h,tval) {
+  a <- c/(1+size/d)
+  N0 - lambertW(a*h*N0*exp(-a*(tval-h*N0)))/(a*h)
+}
+
+rogers.hyperbolquad <- function(N0,c,size,d,phi,h,tval) {
+  a <- c/(1+(size/d)+phi*(size/d)^2)
+  N0 - lambertW(a*h*N0*exp(-a*(tval-h*N0)))/(a*h)
+}
+
+rogers.exp <- function(N0,c,size,d,h,tval) {
+  a <-   c*exp(-size/d)
+  N0 - lambertW(a*h*N0*exp(-a*(tval-h*N0)))/(a*h)
+}
+
+```
+
+
+Here are a few fits using rogers as examples.  Other forms might require the use of alternative optimizations or fitting on a log scale to resolve fitting issues.
+
+```{r}
+sv = list(c=.5,d=6,h=0.001)
+
+ricker_rog = mle2(killed~dbinom(prob=(rogers.ricker(N0,c,size,d,h,tval=1)/N0),
+                                size=N0),
+                  start=c(sv,list(gamma=.1)),
+                  data=x.rog,method="L-BFGS-B",lower=1e-5)
+
+exp_rog = mle2(killed~dbinom(prob=(rogers.exp(N0,c,size,d,h,tval=1)/N0),
+                                size=N0),
+                  start=c(sv,list(gamma=.1)),
+                  data=x.rog,method="L-BFGS-B",lower=1e-5)
+
+hyperq = mle2(killed~dbinom(prob=(rogers.hyperbolquad(N0,c,size,d,phi,h,tval=1)/N0),size=N0),
+          start=list(c=1/5.65,d=(5.65/-0.656),h=0.00698,phi=0.02536*(5.65/(0.656^2))),
+          method="L-BFGS-B",lower=1e-5,control=list(maxit=10000),data=x.rog)
+```
+
