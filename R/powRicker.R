@@ -12,7 +12,7 @@ Ricker <- function(s,c,d,g) {c*(s/d*exp(1-(s/d)))}
 expona <- function(s,c,d,g) {c*exp(1-(s/d))}
 
 #' @rdname powRicker
-powRicker2 <- function(s,c,d,g) { c*((s/d)^g*exp(1-(s/d)))}
+powRicker2 <- function(s,c,d,g) {c*((s/d)^g*exp(1-(s/d)))}
 
 #' @rdname powRicker
 hyperbol <- function(s,c,d,g) {c/((1+s)/d)}
