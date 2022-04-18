@@ -1,7 +1,7 @@
 
 
-library(devtools)
-install_github("eahamman/Predator.Diversity")
+#library(devtools)
+#install_github("eahamman/Predator.Diversity")
 
 
 library(Predator.Diversity)
@@ -26,8 +26,9 @@ gamma_2 <- seq(0.001,3.5,length=20) #Size dependence exponent
 
 #Size and growth parameters
 maxsize <- 45 # maximum prey size (all bins will approach this in cohort version)
-dd1 <- 0.001 # diffusion rate
-prey.growth.rate <- c(0) # prey growth rate,0.05
+dd1 <- 0.00 # diffusion rate
+
+prey.growth.rate <- c(0.1) # prey growth rate,0.05
 prey.sizes <- seq(1,maxsize,length=10) # prey size vector
 
 #prey pop dynamics parameters
@@ -50,9 +51,8 @@ time.steps=10
 #create parameter matrices for each predator seperately and then in combination to input into simulation
 parmat <- matrix(c(c1,d1,gamma1,h1,h1, c2,d2,gamma2,h2,h2),  ## c,d,g pred 1 and 2
                  byrow=TRUE,nrow=2,dimnames=list(c("pred1","pred2"),c("c","d","g","m","n")))
-s=1
 #select the functional form of the size dendence
-if(s==1) sizemod=inda else if (s==2) sizemod=expona else sizemod=powRicker
 
 P1 <- Pred_Sims(maxsize=max(prey.sizes), dd1=dd1, r1=prey.growth.rate, prey_dens=prey_density, new_prey=0, pred_dens=c(predator_density,0), #density of predators (vector)
                 predpar.mat=parmat,timevec=timeint,num_steps=time.steps,afun="inda",hfun="indh",svec0=prey.sizes)
+P1

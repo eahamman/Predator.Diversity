@@ -3,6 +3,7 @@
 export(FR_Data_Sim)
 export(FR_Disp)
 export(Gompertz)
+export(Gompertz_size)
 export(Pred_Sims)
 export(calcDiff)
 export(calcPred)

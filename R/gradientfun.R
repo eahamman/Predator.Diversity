@@ -21,7 +21,7 @@ gradientfun <- function(time,x,params, afun=inda, hfun=indh) {
   r <- growpars["r"]
 
   # Prey growth: labels on prey bins (svec) grow according to Gompertz growth
-  svec <- Gompertz_size(max_size,-log((svec0)/max_size),r)
+  svec <- svec0 + Gompertz_size(max_size,svec0,r)
   
   X <- relist(x,list(pred=numeric(npred),prey=numeric(length(svec))))
   index_0 <- match(0,svec)  ## which element of svec corresponds to size == 0?
