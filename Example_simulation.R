@@ -1,11 +1,11 @@
 
 
 library(devtools)
-install_github("eahamman/Predator.Diversity")
 library(roxygen2)
 
-library(Predator.Diversity)
+install_github("eahamman/Predator.Diversity")
 
+library(Predator.Diversity)
 
 
 #FR -Parameter Specification
