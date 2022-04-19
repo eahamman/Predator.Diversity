@@ -2,7 +2,7 @@
 
 library(devtools)
 install_github("eahamman/Predator.Diversity")
-
+library(roxygen2)
 
 library(Predator.Diversity)
 
@@ -54,5 +54,7 @@ parmat <- matrix(c(c1,d1,gamma1,h1,h1, c2,d2,gamma2,h2,h2),  ## c,d,g pred 1 and
 #select the functional form of the size dendence
 
 P1 <- Pred_Sims(maxsize=max(prey.sizes), dd1=dd1, r1=prey.growth.rate, prey_dens=prey_density, new_prey=0, pred_dens=c(predator_density,1), #density of predators (vector)
-                predpar.mat=parmat,timevec=timeint,num_steps=time.steps,afun="expona",hfun="indh",svec0=prey.sizes)
+                predpar.mat=parmat,timevec=timeint,num_steps=time.steps,afun=inda,hfun=indh,svec0=prey.sizes)
 P1
+
+?powRicker
