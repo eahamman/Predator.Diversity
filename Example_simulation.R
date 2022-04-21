@@ -3,7 +3,7 @@
 library(devtools)
 library(roxygen2)
 
-install_github("eahamman/Predator.Diversity")
+install_github("eahamman/Predator.Diversity",force=TRUE)
 
 library(Predator.Diversity)
 

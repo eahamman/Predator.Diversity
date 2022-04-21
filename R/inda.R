@@ -3,4 +3,5 @@
 #' @param c maximum rate
 #' @param d size at maximum attack rate (scaling factor along size classes)
 #' @param g scaler parameter (for power ricker)
+#' @export
 inda <- function (s,c,d,g) {rep(c,length.out=length(s))}
